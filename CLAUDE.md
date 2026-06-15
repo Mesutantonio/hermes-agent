@@ -2,6 +2,31 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## What this repo is
+
+This is **Agent O** — an enterprise orchestration agent built on the Nous Research Hermes Agent codebase (MIT licence). It has been stripped of personal/consumer features and is being extended for enterprise multi-tenant use. See [AGENTS.md](AGENTS.md) for the full Hermes development reference.
+
+## Removed from upstream Hermes (do not restore)
+
+The following directories and files were deliberately removed as part of the Agent O cleanup. They are not missing by accident — do not recreate them.
+
+| Removed | Reason |
+|---|---|
+| `ui-tui/`, `tui_gateway/` | Ink/React terminal UI and its Python backend. Agent O is accessed via the messaging gateway and REST API, not an interactive terminal UI. *(pending removal)* |
+| `apps/` | Electron desktop app and Tauri bootstrap installer. No desktop client for enterprise deployment. |
+| `web/` | React dashboard whose main surface embeds `hermes --tui` via PTY. Removed with the TUI. A purpose-built Agent O admin panel will be built separately if needed. |
+| `acp_adapter/`, `acp_registry/` | VS Code / Zed / JetBrains ACP integration. Not relevant to enterprise agent deployment. |
+| `website/` | Docusaurus documentation site for hermes-agent.nousresearch.com. Agent O hosts its own docs. |
+| `packaging/` | Homebrew formula. Agent O deploys via Docker, not Homebrew. |
+| `assets/` | Banner image (`banner.png`) for the upstream README/website. |
+| `.plans/`, `plans/` | Nous Research internal planning documents. Not applicable to Agent O. |
+| `nix/`, `flake.nix`, `flake.lock` | Nix packaging and dev environment. Agent O uses Docker. |
+| `infographic/` | Marketing infographic assets. |
+| `datagen-config-examples/` | Training data generation configs for Nous Research model training. |
+| `README.ur-pk.md`, `README.zh-CN.md` | Non-English README translations. |
+
+**`locales/` was kept** — it looks like UI translations but is a gateway runtime dependency. `gateway/run.py` imports `agent.i18n` which loads `locales/*.yaml` at startup to translate system messages sent to messaging platforms. Deleting it breaks the gateway.
+
 ## Development Setup
 
 ```bash
