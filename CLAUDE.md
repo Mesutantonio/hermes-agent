@@ -175,3 +175,72 @@ Bundled skills (`skills/`) ship by default. Heavier/niche official skills go in 
 2. Reference Hermes native tools by name (`` `terminal` ``, `` `read_file` ``, `` `web_extract` ``, etc.) — not raw shell utilities like `grep`, `cat`, `curl`.
 3. Skills using POSIX-only primitives must declare `platforms: [linux]` or `[macos, linux]` in frontmatter.
 4. Skill tests at `tests/skills/test_<skill>_skill.py` — stdlib + pytest + `unittest.mock` only, no live network calls.
+
+## Adding a Core Tool
+
+Built-in tools require exactly **two file changes**. For custom/niche tools, prefer the plugin route (`~/.hermes/plugins/<name>/`) over growing core.
+
+**1. Create `tools/your_tool.py`:**
+```python
+import json
+from tools.registry import registry
+
+def check_requirements() -> bool:
+    return bool(os.getenv("EXAMPLE_API_KEY"))
+
+registry.register(
+    name="example_tool",
+    toolset="example",
+    schema={"name": "example_tool", "description": "...", "parameters": {...}},
+    handler=lambda args, **kw: json.dumps({"result": example_tool(args.get("param", ""), kw.get("task_id"))}),
+    check_fn=check_requirements,
+    requires_env=["EXAMPLE_API_KEY"],
+)
+```
+
+**2. Add to a toolset in `toolsets.py`** — auto-discovery imports the file and registers the schema, but the tool is only exposed to agents when its name appears in a toolset.
+
+Use `get_hermes_home()` for any state files; `display_hermes_home()` in schema descriptions. All handlers must return a JSON string.
+
+## Profiles
+
+Hermes supports fully isolated instances via `HERMES_HOME`. The core mechanism: `_apply_profile_override()` in `hermes_cli/main.py` sets `HERMES_HOME` before any module imports, so all `get_hermes_home()` calls automatically scope to the active profile.
+
+Rules:
+- Always `from hermes_constants import get_hermes_home` — never `Path.home() / ".hermes"`.
+- Always `from hermes_constants import display_hermes_home` for user-facing path strings.
+- Profile root (`_get_profiles_root()`) is always `Path.home() / ".hermes" / "profiles"` (HOME-anchored, not HERMES_HOME-anchored) so `hermes -p coder profile list` can see all profiles regardless of which is active.
+- Tests that mock `Path.home()` must also `monkeypatch.setenv("HERMES_HOME", ...)` since code reads the env var, not `Path.home()`.
+
+## Known Pitfalls
+
+**Hardcoded `~/.hermes` paths break profiles.** Use `get_hermes_home()` / `display_hermes_home()` everywhere. This caused 5 bugs fixed in PR #3575.
+
+**`simple_term_menu` has rendering bugs** (ghost duplication in tmux/iTerm2). Existing call sites in `hermes_cli/main.py` are legacy fallback only. New interactive menus must use `hermes_cli/curses_ui.py`.
+
+**`\033[K` (ANSI erase-to-EOL) leaks as literal `?[K`** under `prompt_toolkit`'s `patch_stdout`. Use space-padding instead: `f"\r{line}{' ' * pad}"`.
+
+**`_last_resolved_tool_names` is a process-global in `model_tools.py`.** `_run_single_child()` in `delegate_tool.py` saves and restores it around subagent execution. New code reading this global may see stale state during child agent runs.
+
+**Cross-tool references in schema descriptions cause hallucinations.** Don't mention tools from other toolsets in schema text — they may be unavailable. Add cross-references dynamically in `get_tool_definitions()` in `model_tools.py` instead (see the `browser_navigate` / `execute_code` blocks for the pattern).
+
+**The gateway has two sequential message guards** — both must bypass approval/control commands. The base adapter (`gateway/platforms/base.py`) queues messages when `session_key in self._active_sessions`; the runner (`gateway/run.py`) intercepts `/stop`, `/approve`, etc. New commands that must reach the runner while an agent is blocked must bypass BOTH guards and dispatch inline, not via `_process_message_background()`.
+
+**Squash-merging a stale branch silently reverts recent fixes.** Ensure the branch is rebased onto `main` before squash-merging. Verify with `git diff HEAD~1..HEAD` — unexpected deletions are a red flag.
+
+**Tests must not write to `~/.hermes/`.** The `_isolate_hermes_home` autouse fixture in `tests/conftest.py` redirects `HERMES_HOME` to a temp dir. When testing profile features, also mock `Path.home()`:
+```python
+@pytest.fixture
+def profile_env(tmp_path, monkeypatch):
+    home = tmp_path / ".hermes"
+    home.mkdir()
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    monkeypatch.setenv("HERMES_HOME", str(home))
+    return home
+```
+
+**Absence can be load-bearing.** Missing `__init__.py` files in `tests/` are intentional — adding them can make test directories importable as dotted packages that shadow real plugins, deleting their `register()` at import time.
+
+---
+
+> For the full development reference — contribution rubric, footprint ladder, AIAgent class API, detailed CLI/TUI/desktop architecture, plugin authoring, skills standards, delegation, cron, kanban, and skin system — see [AGENTS.md](AGENTS.md).
