@@ -12,7 +12,7 @@ The following directories and files were deliberately removed as part of the Age
 
 | Removed | Reason |
 |---|---|
-| `ui-tui/`, `tui_gateway/` | Ink/React terminal UI and its Python backend. Agent O is accessed via the messaging gateway and REST API, not an interactive terminal UI. *(pending removal)* |
+| `ui-tui/`, `tui_gateway/` | Ink/React terminal UI and its Python backend. Agent O uses the plain `cli.py` REPL for developer testing — the full-screen Node.js TUI is not needed. *(pending removal)* |
 | `apps/` | Electron desktop app and Tauri bootstrap installer. No desktop client for enterprise deployment. |
 | `web/` | React dashboard whose main surface embeds `hermes --tui` via PTY. A purpose-built Agent O admin panel will be built separately if needed. |
 | `acp_adapter/`, `acp_registry/` | VS Code / Zed / JetBrains ACP integration. Not relevant to enterprise agent deployment. |
@@ -38,6 +38,7 @@ The following directories and files were deliberately removed as part of the Age
 | `hermes_cli/telegram_managed_bot.py` | Telegram bot management helper. Dead code once the Telegram adapter was removed. |
 | `docs/design/profile-builder.md` | Nous Research design proposal for a dashboard-based profile wizard (never implemented). References the dashboard that was already removed. |
 | `docs/plans/2026-06-09-003-fix-telegram-stream-overflow-continuations-plan.md` | Telegram-specific internal fix plan. No relevance after Telegram adapter removal. |
+| `.envrc` | direnv config that auto-activated the Nix flake and watched `ui-tui/`, `website/`, `apps/`, `nix/` — all of which have been removed. |
 
 ### Kept in gateway/platforms/ (non-obvious)
 
@@ -60,6 +61,70 @@ The following directories and files were deliberately removed as part of the Age
 **`MANIFEST.in`** — tells setuptools which non-Python files to include in a source distribution. Ensures `locales/`, `skills/`, and plugin manifests are bundled in any pip-installable build.
 
 **`.hadolint.yaml`** — Dockerfile linter config with documented rule suppressions that still apply to the Agent O Dockerfile.
+
+## Explicitly kept for Agent O
+
+### CLI and display layer
+
+`cli.py`, `hermes` (entrypoint), `hermes_cli/`, `hermes_bootstrap.py` — the developer-facing terminal interface. Used for local testing and debugging only; enterprise users connect via the gateway.
+
+Includes the display/aesthetics layer: `hermes_cli/skin_engine.py` (CLI theming), `hermes_cli/banner.py`, `agent/display.py` (KawaiiSpinner, tool output feed). These are imported by `cli.py` and `agent/display.py` and cannot be easily removed without surgery — and there's no reason to since this is how the developer interacts with Agent O locally.
+
+> **Not the TUI.** `hermes --tui` (the full-screen Ink/React UI) requires `ui-tui/` and `tui_gateway/` which are being removed. `hermes` (no flag) runs the plain `cli.py` REPL — no Node.js required.
+
+---
+
+### Core agent engine
+
+The ReAct loop and everything it depends on. Nothing here is negotiable.
+
+| Component | Files |
+|---|---|
+| Agent loop | `run_agent.py` — `AIAgent` class, ReAct loop, system prompt builder, context compression trigger |
+| Tool orchestration | `model_tools.py` — `discover_builtin_tools()`, `handle_function_call()` |
+| Tool registry | `tools/` — 80+ tools, `tools/registry.py` — self-registration pattern |
+| Toolset gating | `toolsets.py`, `toolset_distributions.py` — controls what tools the agent can see |
+| Agent internals | `agent/` — provider adapters, memory manager, context compressor, auxiliary LLM client, curator, display |
+| Session persistence | `hermes_state.py` — SQLite + FTS5, every message and tool call stored |
+| Path resolution | `hermes_constants.py` — `get_hermes_home()` / `display_hermes_home()` — all HERMES_HOME paths go through here |
+| Logging | `hermes_logging.py` — `agent.log`, `errors.log`, `gateway.log` |
+| Skills system | `skills/`, `tools/skills_tool.py`, `tools/skills_hub.py` — skill library + read/write/manage |
+| Scheduler | `cron/` — `jobs.py` + `scheduler.py`, runs full agent pipeline on a timer |
+| Fine-tuning pipeline | `batch_runner.py`, `trajectory_compressor.py` — generate and process training trajectories from Agent O runs for LLM fine-tuning on tool-calling behaviour |
+
+---
+
+### Gateway framework
+
+`gateway/` is fully kept — the orchestration layer that routes inbound messages to `AIAgent` and sends responses back. Platform adapters were stripped; the core machinery stays.
+
+| Kept in `gateway/platforms/` | Purpose |
+|---|---|
+| `base.py` | `BasePlatformAdapter` ABC — every adapter (including the company one) extends this |
+| `api_server.py` | OpenAI-compatible REST endpoint — **primary connection surface for the company platform** |
+| `webhook.py` | Inbound webhooks — **non-human triggers** (business events, monitoring, inter-agent escalation) |
+| `msgraph_webhook.py` | Microsoft Graph change-notification webhook — **future Teams integration** |
+| `helpers.py`, `_http_client_limits.py` | Shared gateway utilities |
+
+`plugins/platforms/teams/` — full Teams adapter kept for future integration.
+
+---
+
+### Terminal backend (decision pending)
+
+`tools/environments/` contains the terminal execution backends: `local.py`, `docker.py`, `ssh.py`, `modal.py`, `singularity.py`, `daytona.py`.
+
+**Decision pending:** which backend Agent O will use when hosted within the company's infrastructure. Options range from local subprocess execution inside the Docker container, to SSH into a sandboxed VM, to a managed cloud execution environment. Keep all backends until the hosting model is decided.
+
+---
+
+### Memory providers (decision pending)
+
+`plugins/memory/` contains pluggable memory backends: honcho, mem0, supermemory, byterover, hindsight, holographic, openviking, retaindb. Each implements the `MemoryProvider` ABC from `agent/memory_provider.py`.
+
+**Decision pending:** Agent O requires per-tenant, per-user memory isolation which none of these personal-use providers natively support. The plan is to implement a custom enterprise memory provider as a standalone plugin. Keep the existing providers as reference implementations of the `MemoryProvider` ABC until the enterprise memory system is designed.
+
+---
 
 ## Development Setup
 
