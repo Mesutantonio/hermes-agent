@@ -27,6 +27,14 @@ The following directories and files were deliberately removed as part of the Age
 
 **`locales/` was kept** — it looks like UI translations but is a gateway runtime dependency. `gateway/run.py` imports `agent.i18n` which loads `locales/*.yaml` at startup to translate system messages sent to messaging platforms. Deleting it breaks the gateway.
 
+**`LICENSE` was kept** — MIT licence requires the copyright notice to be preserved in any copy or substantial portion of the software. Agent O is built on Hermes; removing this would be a licence violation.
+
+**`MANIFEST.in` was kept** — tells setuptools which non-Python files to include in a source distribution. Ensures `locales/`, `skills/`, and plugin manifests are bundled in any pip-installable build.
+
+**`.hadolint.yaml` was kept** — Dockerfile linter config with documented rule suppressions. Still applies to the Agent O Dockerfile.
+
+**`.mailmap` was removed** — git contributor identity map for the Nous Research open-source repo. No effect on build or runtime.
+
 ## Development Setup
 
 ```bash
