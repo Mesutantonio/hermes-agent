@@ -32,6 +32,20 @@ The following directories and files were deliberately removed as part of the Age
 | `.mailmap` | Git contributor identity map for the Nous Research open-source repo. No effect on build or runtime. |
 | `optional-mcps/` | Nous-curated optional MCP server configs (Linear, n8n). Agent O will configure its own MCP servers. `hermes_cli/mcp_catalog.py` and `hermes_constants.get_optional_mcps_dir()` handle a missing directory gracefully. |
 | `mini_swe_runner.py` | SWE-bench software engineering benchmark runner. Nous Research research tooling, no relevance to Agent O. Never imported by core. |
+| `gateway/platforms/telegram.py`, `telegram_network.py`, `slack.py`, `signal.py`, `signal_rate_limit.py`, `matrix.py`, `email.py`, `sms.py`, `dingtalk.py`, `feishu.py`, `feishu_comment.py`, `feishu_comment_rules.py`, `feishu_meeting_invite.py`, `weixin.py`, `wecom.py`, `wecom_callback.py`, `wecom_crypto.py`, `whatsapp.py`, `whatsapp_cloud.py`, `whatsapp_common.py`, `bluebubbles.py`, `yuanbao.py`, `yuanbao_media.py`, `yuanbao_proto.py`, `yuanbao_sticker.py`, `qqbot/` | Consumer messaging platform adapters. Agent O connects via `api_server.py` (company platform REST) and `webhook.py` (non-human triggers). These 26 files/dirs are not needed. |
+| `plugins/platforms/discord/`, `google_chat/`, `homeassistant/`, `irc/`, `line/`, `mattermost/`, `ntfy/`, `photon/`, `simplex/` | Consumer platform plugins. Removed alongside the built-in adapters above. |
+
+### Kept in gateway/platforms/ (non-obvious)
+
+**`base.py`** — Core ABC (`BasePlatformAdapter`, `MessageEvent`, `SendResult`). Imported at module level by `run.py`, `stream_consumer.py`, `slash_commands.py`. Cannot be removed.
+
+**`msgraph_webhook.py`** — Microsoft Graph inbound webhook handler. Kept because it is directly relevant to the planned Teams integration — it receives Teams/Office365 change-notification events.
+
+**`plugins/platforms/teams/`** — Full Teams adapter (53KB `adapter.py`, Azure AD config). Kept for future Teams integration.
+
+### Known dead code after platform adapter removal
+
+`gateway/run.py` lines 6389–6555 contain a 20-branch `if/elif` chain dispatching to each platform adapter via lazy imports. With the adapters gone, 18 branches are dead code. **Not a runtime issue** — lazy imports mean nothing breaks. Remove this block when writing the company adapter, replacing it with a plugin registry lookup.
 
 ### Kept from upstream (non-obvious)
 
