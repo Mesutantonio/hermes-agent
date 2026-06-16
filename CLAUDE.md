@@ -14,26 +14,32 @@ The following directories and files were deliberately removed as part of the Age
 |---|---|
 | `ui-tui/`, `tui_gateway/` | Ink/React terminal UI and its Python backend. Agent O is accessed via the messaging gateway and REST API, not an interactive terminal UI. *(pending removal)* |
 | `apps/` | Electron desktop app and Tauri bootstrap installer. No desktop client for enterprise deployment. |
-| `web/` | React dashboard whose main surface embeds `hermes --tui` via PTY. Removed with the TUI. A purpose-built Agent O admin panel will be built separately if needed. |
+| `web/` | React dashboard whose main surface embeds `hermes --tui` via PTY. A purpose-built Agent O admin panel will be built separately if needed. |
 | `acp_adapter/`, `acp_registry/` | VS Code / Zed / JetBrains ACP integration. Not relevant to enterprise agent deployment. |
 | `website/` | Docusaurus documentation site for hermes-agent.nousresearch.com. Agent O hosts its own docs. |
 | `packaging/` | Homebrew formula. Agent O deploys via Docker, not Homebrew. |
-| `assets/` | Banner image (`banner.png`) for the upstream README/website. |
-| `.plans/`, `plans/` | Nous Research internal planning documents. Not applicable to Agent O. |
+| `assets/` | Banner image for the upstream README/website. |
+| `.plans/`, `plans/` | Nous Research internal planning documents. |
 | `nix/`, `flake.nix`, `flake.lock` | Nix packaging and dev environment. Agent O uses Docker. |
 | `infographic/` | Marketing infographic assets. |
 | `datagen-config-examples/` | Training data generation configs for Nous Research model training. |
 | `README.ur-pk.md`, `README.zh-CN.md` | Non-English README translations. |
+| `CONTRIBUTING.md` | Open-source contributor guide for the Nous Research community project. |
+| `SECURITY.md` | Nous Research vulnerability disclosure policy. Agent O will define its own. |
+| `hermes-already-has-routines.md` | Internal Nous Research explainer doc. |
+| `constraints-termux.txt` | pip constraints for Termux (Android terminal). Not a target platform. |
+| `.github/` | Nous Research CI/CD workflows, issue templates, and PR templates. Agent O will configure its own pipeline. |
+| `.mailmap` | Git contributor identity map for the Nous Research open-source repo. No effect on build or runtime. |
 
-**`locales/` was kept** — it looks like UI translations but is a gateway runtime dependency. `gateway/run.py` imports `agent.i18n` which loads `locales/*.yaml` at startup to translate system messages sent to messaging platforms. Deleting it breaks the gateway.
+### Kept from upstream (non-obvious)
 
-**`LICENSE` was kept** — MIT licence requires the copyright notice to be preserved in any copy or substantial portion of the software. Agent O is built on Hermes; removing this would be a licence violation.
+**`locales/`** — looks like UI translations but is a gateway runtime dependency. `gateway/run.py` imports `agent.i18n` which loads `locales/*.yaml` at startup to translate system messages sent to messaging platforms. Deleting it breaks the gateway.
 
-**`MANIFEST.in` was kept** — tells setuptools which non-Python files to include in a source distribution. Ensures `locales/`, `skills/`, and plugin manifests are bundled in any pip-installable build.
+**`LICENSE`** — MIT licence requires the copyright notice to be preserved in any copy or substantial portion of the software. Agent O is built on Hermes; removing this would be a licence violation.
 
-**`.hadolint.yaml` was kept** — Dockerfile linter config with documented rule suppressions. Still applies to the Agent O Dockerfile.
+**`MANIFEST.in`** — tells setuptools which non-Python files to include in a source distribution. Ensures `locales/`, `skills/`, and plugin manifests are bundled in any pip-installable build.
 
-**`.mailmap` was removed** — git contributor identity map for the Nous Research open-source repo. No effect on build or runtime.
+**`.hadolint.yaml`** — Dockerfile linter config with documented rule suppressions that still apply to the Agent O Dockerfile.
 
 ## Development Setup
 
