@@ -30,6 +30,8 @@ The following directories and files were deliberately removed as part of the Age
 | `constraints-termux.txt` | pip constraints for Termux (Android terminal). Not a target platform. |
 | `.github/` | Nous Research CI/CD workflows, issue templates, and PR templates. Agent O will configure its own pipeline. |
 | `.mailmap` | Git contributor identity map for the Nous Research open-source repo. No effect on build or runtime. |
+| `optional-mcps/` | Nous-curated optional MCP server configs (Linear, n8n). Agent O will configure its own MCP servers. `hermes_cli/mcp_catalog.py` and `hermes_constants.get_optional_mcps_dir()` handle a missing directory gracefully. |
+| `mini_swe_runner.py` | SWE-bench software engineering benchmark runner. Nous Research research tooling, no relevance to Agent O. Never imported by core. |
 
 ### Kept from upstream (non-obvious)
 
