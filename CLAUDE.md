@@ -34,6 +34,10 @@ The following directories and files were deliberately removed as part of the Age
 | `mini_swe_runner.py` | SWE-bench software engineering benchmark runner. Nous Research research tooling, no relevance to Agent O. Never imported by core. |
 | `gateway/platforms/telegram.py`, `telegram_network.py`, `slack.py`, `signal.py`, `signal_rate_limit.py`, `matrix.py`, `email.py`, `sms.py`, `dingtalk.py`, `feishu.py`, `feishu_comment.py`, `feishu_comment_rules.py`, `feishu_meeting_invite.py`, `weixin.py`, `wecom.py`, `wecom_callback.py`, `wecom_crypto.py`, `whatsapp.py`, `whatsapp_cloud.py`, `whatsapp_common.py`, `bluebubbles.py`, `yuanbao.py`, `yuanbao_media.py`, `yuanbao_proto.py`, `yuanbao_sticker.py`, `qqbot/` | Consumer messaging platform adapters. Agent O connects via `api_server.py` (company platform REST) and `webhook.py` (non-human triggers). These 26 files/dirs are not needed. |
 | `plugins/platforms/discord/`, `google_chat/`, `homeassistant/`, `irc/`, `line/`, `mattermost/`, `ntfy/`, `photon/`, `simplex/` | Consumer platform plugins. Removed alongside the built-in adapters above. |
+| `gateway/assets/` | Contained only `telegram-botfather-threads-settings.jpg` — a Telegram setup guide screenshot. Removed with the Telegram adapter. |
+| `hermes_cli/telegram_managed_bot.py` | Telegram bot management helper. Dead code once the Telegram adapter was removed. |
+| `docs/design/profile-builder.md` | Nous Research design proposal for a dashboard-based profile wizard (never implemented). References the dashboard that was already removed. |
+| `docs/plans/2026-06-09-003-fix-telegram-stream-overflow-continuations-plan.md` | Telegram-specific internal fix plan. No relevance after Telegram adapter removal. |
 
 ### Kept in gateway/platforms/ (non-obvious)
 
