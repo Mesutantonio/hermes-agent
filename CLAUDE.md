@@ -9,13 +9,25 @@ This is **Agent O** — an enterprise orchestration agent built on the Nous Rese
 - [AGENT_O.md](AGENT_O.md) — Agent O build log and progress documentation (grows over time)
 - [AGENTS.md](AGENTS.md) — Full Hermes developer reference (architecture, patterns, critical rules)
 
+## Pending Removal (Phase 1 — agreed, not yet executed)
+
+These items have been agreed for removal but not yet deleted. Remove them before starting Phase 2 work.
+
+| Item | Reason |
+|---|---|
+| `ui-tui/` | Ink/React full-screen TUI. Agent O uses the plain `cli.py` REPL — the Node.js TUI is not needed. |
+| `tui_gateway/` | Python backend that pairs with `ui-tui/`. Dead code once `ui-tui/` is gone. |
+| `optional-skills/` | Nous Research open-source skill library. Agent O will define its own skills. |
+| `setup-hermes.sh` | Contributor quick-start script for the Nous Research open-source project. Not relevant to Agent O deployment. |
+| `docker-compose.windows.yml` | Windows Docker Compose override. Agent O targets Linux containers. |
+| `package.json`, `package-lock.json` | npm workspace root for `ui-tui/`, `apps/`, and `web/` — all removed or pending removal. Serves no purpose once `ui-tui/` is deleted. |
+
 ## Removed from upstream Hermes (do not restore)
 
 The following directories and files were deliberately removed as part of the Agent O cleanup. They are not missing by accident — do not recreate them.
 
 | Removed | Reason |
 |---|---|
-| `ui-tui/`, `tui_gateway/` | Ink/React terminal UI and its Python backend. Agent O uses the plain `cli.py` REPL for developer testing — the full-screen Node.js TUI is not needed. *(pending removal)* |
 | `apps/` | Electron desktop app and Tauri bootstrap installer. No desktop client for enterprise deployment. |
 | `web/` | React dashboard whose main surface embeds `hermes --tui` via PTY. A purpose-built Agent O admin panel will be built separately if needed. |
 | `acp_adapter/`, `acp_registry/` | VS Code / Zed / JetBrains ACP integration. Not relevant to enterprise agent deployment. |
