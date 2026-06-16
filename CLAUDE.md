@@ -4,7 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-This is **Agent O** — an enterprise orchestration agent built on the Nous Research Hermes Agent codebase (MIT licence). It has been stripped of personal/consumer features and is being extended for enterprise multi-tenant use. See [AGENTS.md](AGENTS.md) for the full Hermes development reference.
+This is **Agent O** — an enterprise orchestration agent built on the Nous Research Hermes Agent codebase (MIT licence). It has been stripped of personal/consumer features and is being extended for enterprise multi-tenant use.
+
+- [AGENT_O.md](AGENT_O.md) — Agent O build log and progress documentation (grows over time)
+- [AGENTS.md](AGENTS.md) — Full Hermes developer reference (architecture, patterns, critical rules)
 
 ## Removed from upstream Hermes (do not restore)
 
