@@ -9,6 +9,23 @@ This is **Agent O** — an enterprise orchestration agent built on the Nous Rese
 - [AGENT_O.md](AGENT_O.md) — Agent O build log and progress documentation (grows over time)
 - [AGENTS.md](AGENTS.md) — Full Hermes developer reference (architecture, patterns, critical rules)
 
+## Upstream sync policy
+
+Agent O is a fork of [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent), tracked as the `upstream` remote. We do **not** use `git merge upstream/main` — upstream still contains all the consumer adapters and UIs we deleted, so a straight merge would produce conflicts on every removed file.
+
+**How to sync:**
+1. `git fetch upstream`
+2. `git diff --name-only <last-merge-base> upstream/main` — find changed files
+3. Filter to files that still exist in Agent O: `while IFS= read -r f; do [ -e "$f" ] && echo "$f"; done`
+4. `git checkout upstream/main -- <file>` for each file worth updating
+5. Commit with a summary of what was pulled and what was skipped
+
+**What to skip when syncing:**
+- Commits scoped to `telegram`, `mattermost`, `desktop`, `dashboard`, `electron`, `tui`, `slack`, `signal`, `whatsapp` — consumer features Agent O has removed
+- Files in the Pending Removal list below
+
+**Last synced:** June 2026 — upstream/main at `f9c8d95e4` (160 commits past our branch point `95715dcb03`). Key changes pulled: `delegate_task(background=true)` async subagents, secrets redaction in debug logs, MCP `mcp__` prefix normalisation, memory skill-scaffolding strip, websockets core dep declaration, Teams SDK as installable extra.
+
 ## Pending Removal (Phase 1 — agreed, not yet executed)
 
 These items have been agreed for removal but not yet deleted. Remove them before starting Phase 2 work.
