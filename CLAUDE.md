@@ -26,19 +26,6 @@ Agent O is a fork of [NousResearch/hermes-agent](https://github.com/NousResearch
 
 **Last synced:** June 2026 — upstream/main at `f9c8d95e4` (160 commits past our branch point `95715dcb03`). Key changes pulled: `delegate_task(background=true)` async subagents, secrets redaction in debug logs, MCP `mcp__` prefix normalisation, memory skill-scaffolding strip, websockets core dep declaration, Teams SDK as installable extra.
 
-## Pending Removal (Phase 1 — agreed, not yet executed)
-
-These items have been agreed for removal but not yet deleted. Remove them before starting Phase 2 work.
-
-| Item | Reason |
-|---|---|
-| `ui-tui/` | Ink/React full-screen TUI. Agent O uses the plain `cli.py` REPL — the Node.js TUI is not needed. |
-| `tui_gateway/` | Python backend that pairs with `ui-tui/`. Dead code once `ui-tui/` is gone. |
-| `optional-skills/` | Nous Research open-source skill library. Agent O will define its own skills. |
-| `setup-hermes.sh` | Contributor quick-start script for the Nous Research open-source project. Not relevant to Agent O deployment. |
-| `docker-compose.windows.yml` | Windows Docker Compose override. Agent O targets Linux containers. |
-| `package.json`, `package-lock.json` | npm workspace root for `ui-tui/`, `apps/`, and `web/` — all removed or pending removal. Serves no purpose once `ui-tui/` is deleted. |
-
 ## Removed from upstream Hermes (do not restore)
 
 The following directories and files were deliberately removed as part of the Agent O cleanup. They are not missing by accident — do not recreate them.
@@ -71,6 +58,11 @@ The following directories and files were deliberately removed as part of the Age
 | `docs/design/profile-builder.md` | Nous Research design proposal for a dashboard-based profile wizard (never implemented). References the dashboard that was already removed. |
 | `docs/plans/2026-06-09-003-fix-telegram-stream-overflow-continuations-plan.md` | Telegram-specific internal fix plan. No relevance after Telegram adapter removal. |
 | `.envrc` | direnv config that auto-activated the Nix flake and watched `ui-tui/`, `website/`, `apps/`, `nix/` — all of which have been removed. |
+| `ui-tui/`, `tui_gateway/` | Ink/React full-screen TUI and its Python backend. Agent O uses the plain `cli.py` REPL for developer testing. |
+| `optional-skills/` | Nous Research open-source skill library. Agent O defines its own skills in `skills/`. |
+| `setup-hermes.sh` | Contributor quick-start script for the Nous Research open-source project. Not relevant to Agent O deployment. |
+| `docker-compose.windows.yml` | Windows Docker Compose override. Agent O targets Linux containers. |
+| `package.json`, `package-lock.json` | npm workspace root for `ui-tui/`, `apps/`, and `web/` — all removed. |
 | `tools/environments/ssh.py` | SSH remote execution backend. Agent O is always in Docker; remote SSH execution is not needed. |
 | `tools/environments/modal.py`, `managed_modal.py`, `modal_utils.py` | Modal cloud sandbox backends. External cloud service, not used in self-hosted Docker deployment. |
 | `tools/environments/singularity.py` | Apptainer/Singularity HPC container backend. No HPC use case for Agent O. |
@@ -171,17 +163,49 @@ These are kept as **reference implementations only**. None of them are active in
 ```bash
 # Create venv and install all extras
 uv venv .venv --python 3.11
-source .venv/activate
+source .venv/bin/activate
 uv pip install -e ".[all,dev]"
-
-# Optional: browser tools
-npm install
 
 # Config
 mkdir -p ~/.hermes/{cron,sessions,logs,memories,skills}
 cp cli-config.yaml.example ~/.hermes/config.yaml
 touch ~/.hermes/.env
 echo "OPENROUTER_API_KEY=***" >> ~/.hermes/.env
+```
+
+## Build & run (Docker)
+
+Agent O is always deployed as a Docker container. The image is Python-only — no Node.js, npm, or browser runtime.
+
+```bash
+# Build
+docker build -t agent-o:baseline .
+
+# Run (gateway mode, REST API on port 8642)
+docker run -d --name agent-o \
+  -e HERMES_UID=$(id -u) -e HERMES_GID=$(id -g) \
+  -e API_SERVER_HOST=0.0.0.0 -e API_SERVER_PORT=8642 \
+  -e API_SERVER_KEY=<your-token> \
+  -e OPENROUTER_API_KEY=<your-key> \
+  -v ~/.hermes:/opt/data -p 8642:8642 \
+  agent-o:baseline gateway run
+
+# Or with docker compose (reads OPENROUTER_API_KEY and API_SERVER_KEY from ~/.hermes/.env)
+HERMES_UID=$(id -u) HERMES_GID=$(id -g) docker compose up -d
+```
+
+**Health check:**
+```bash
+curl -s http://localhost:8642/health
+# -> {"status": "ok", "platform": "hermes-agent", "version": "..."}
+```
+
+**Send a prompt:**
+```bash
+curl -s http://localhost:8642/v1/chat/completions \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"hermes-agent","messages":[{"role":"user","content":"Hello"}]}'
 ```
 
 ## Running Tests
