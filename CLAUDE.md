@@ -71,6 +71,11 @@ The following directories and files were deliberately removed as part of the Age
 | `docs/design/profile-builder.md` | Nous Research design proposal for a dashboard-based profile wizard (never implemented). References the dashboard that was already removed. |
 | `docs/plans/2026-06-09-003-fix-telegram-stream-overflow-continuations-plan.md` | Telegram-specific internal fix plan. No relevance after Telegram adapter removal. |
 | `.envrc` | direnv config that auto-activated the Nix flake and watched `ui-tui/`, `website/`, `apps/`, `nix/` — all of which have been removed. |
+| `tools/environments/ssh.py` | SSH remote execution backend. Agent O is always in Docker; remote SSH execution is not needed. |
+| `tools/environments/modal.py`, `managed_modal.py`, `modal_utils.py` | Modal cloud sandbox backends. External cloud service, not used in self-hosted Docker deployment. |
+| `tools/environments/singularity.py` | Apptainer/Singularity HPC container backend. No HPC use case for Agent O. |
+| `tools/environments/daytona.py` | Daytona cloud workspace backend. External cloud service, not relevant. |
+| `tools/environments/file_sync.py` | File sync helper used only by the removed remote backends (SSH, Modal, Singularity, Daytona). Dead code once those were removed. |
 
 ### Kept in gateway/platforms/ (non-obvious)
 
@@ -142,11 +147,14 @@ The ReAct loop and everything it depends on. Nothing here is negotiable.
 
 ---
 
-### Terminal backend (decision pending)
+### Terminal backend
 
-`tools/environments/` contains the terminal execution backends: `local.py`, `docker.py`, `ssh.py`, `modal.py`, `singularity.py`, `daytona.py`.
+Agent O is always deployed in a Docker container. `tools/environments/` retains only:
 
-**Decision pending:** which backend Agent O will use when hosted within the company's infrastructure. Options range from local subprocess execution inside the Docker container, to SSH into a sandboxed VM, to a managed cloud execution environment. Keep all backends until the hosting model is decided.
+- **`local.py`** — executes shell commands inside the container Agent O runs in. This is the active backend.
+- **`docker.py`** — kept pending a decision on whether Docker-in-Docker is needed for sandboxed task execution.
+
+Removed: `ssh.py`, `modal.py`, `managed_modal.py`, `modal_utils.py`, `singularity.py`, `daytona.py`, `file_sync.py` — remote and cloud execution backends not relevant to a self-hosted Docker deployment.
 
 ---
 
