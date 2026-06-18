@@ -158,11 +158,11 @@ Removed: `ssh.py`, `modal.py`, `managed_modal.py`, `modal_utils.py`, `singularit
 
 ---
 
-### Memory providers (decision pending)
+### Memory providers
 
 `plugins/memory/` contains pluggable memory backends: honcho, mem0, supermemory, byterover, hindsight, holographic, openviking, retaindb. Each implements the `MemoryProvider` ABC from `agent/memory_provider.py`.
 
-**Decision pending:** Agent O requires per-tenant, per-user memory isolation which none of these personal-use providers natively support. The plan is to implement a custom enterprise memory provider as a standalone plugin. Keep the existing providers as reference implementations of the `MemoryProvider` ABC until the enterprise memory system is designed.
+These are kept as **reference implementations only**. None of them are active in Agent O — they are personal-use providers that do not support per-tenant, per-user memory isolation. They serve as integration patterns and API examples for when a custom enterprise memory module is built as a standalone plugin.
 
 ---
 
