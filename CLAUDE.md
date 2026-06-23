@@ -24,7 +24,7 @@ Agent O is a fork of [NousResearch/hermes-agent](https://github.com/NousResearch
 - Commits scoped to `telegram`, `mattermost`, `desktop`, `dashboard`, `electron`, `tui`, `slack`, `signal`, `whatsapp` — consumer features Agent O has removed
 - Files in the Pending Removal list below
 
-**Last synced:** June 2026 — upstream/main at `f9c8d95e4` (160 commits past our branch point `95715dcb03`). Key changes pulled: `delegate_task(background=true)` async subagents, secrets redaction in debug logs, MCP `mcp__` prefix normalisation, memory skill-scaffolding strip, websockets core dep declaration, Teams SDK as installable extra.
+**Last synced:** June 2026 — upstream/main at `bb7ff7dc3` (759 commits past our branch point `95715dcb03`). Key changes pulled: cron per-profile storage revert, MCP keepalive/late-binding fixes, Gemini/Google Cloud Code adapters, credential pool + turn context/retry improvements, new test coverage. Skipped: Dockerfile, docker-compose.yml, CLAUDE.md, AGENT_O.md, tools/terminal_tool.py (Agent O customised), removed platform tests (telegram, slack, signal, whatsapp, matrix, discord, etc.), dashboard/tui_gateway tests.
 
 ## Removed from upstream Hermes (do not restore)
 
