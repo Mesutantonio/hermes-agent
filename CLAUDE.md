@@ -158,6 +158,35 @@ These are kept as **reference implementations only**. None of them are active in
 
 ---
 
+## Baseline verification (Phase 2 testing — June 2026)
+
+Run these in order to verify Agent O is working after any major change.
+
+**Stage 1 — Import check (local, ~2s):**
+```bash
+source .venv/bin/activate
+python -c "import model_tools; model_tools.discover_builtin_tools(); print('tools OK')"
+```
+Pass = prints `tools OK`, no `ModuleNotFoundError`. Last result: **PASS** (June 2026).
+
+**Stage 2 — One-shot smoke (local, ~30s, requires OpenRouter key):**
+```bash
+OPENROUTER_API_KEY=<key> python run_agent.py \
+  --model="anthropic/claude-3-haiku" \
+  --query="Reply with exactly: Agent O baseline online" \
+  --max_turns=1
+```
+Pass = final response is `Agent O baseline online`. Last result: **PASS** (June 2026).
+
+**Stage 3 — Targeted test subset (local, few minutes):**
+```bash
+scripts/run_tests.sh tests/tools/ tests/gateway/ tests/agent/
+```
+Expected: tests for removed platforms (telegram, slack, etc.) fail/skip — that's fine. All tests for kept functionality must pass.
+
+**Stage 4 — Docker end-to-end (the deliverable):**
+See "Build & run (Docker)" section below.
+
 ## Development Setup
 
 ```bash
