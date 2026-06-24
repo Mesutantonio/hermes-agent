@@ -24,20 +24,7 @@ Agent O is a fork of [NousResearch/hermes-agent](https://github.com/NousResearch
 - Commits scoped to `telegram`, `mattermost`, `desktop`, `dashboard`, `electron`, `tui`, `slack`, `signal`, `whatsapp` — consumer features Agent O has removed
 - Files in the Pending Removal list below
 
-**Last synced:** June 2026 — upstream/main at `f9c8d95e4` (160 commits past our branch point `95715dcb03`). Key changes pulled: `delegate_task(background=true)` async subagents, secrets redaction in debug logs, MCP `mcp__` prefix normalisation, memory skill-scaffolding strip, websockets core dep declaration, Teams SDK as installable extra.
-
-## Pending Removal (Phase 1 — agreed, not yet executed)
-
-These items have been agreed for removal but not yet deleted. Remove them before starting Phase 2 work.
-
-| Item | Reason |
-|---|---|
-| `ui-tui/` | Ink/React full-screen TUI. Agent O uses the plain `cli.py` REPL — the Node.js TUI is not needed. |
-| `tui_gateway/` | Python backend that pairs with `ui-tui/`. Dead code once `ui-tui/` is gone. |
-| `optional-skills/` | Nous Research open-source skill library. Agent O will define its own skills. |
-| `setup-hermes.sh` | Contributor quick-start script for the Nous Research open-source project. Not relevant to Agent O deployment. |
-| `docker-compose.windows.yml` | Windows Docker Compose override. Agent O targets Linux containers. |
-| `package.json`, `package-lock.json` | npm workspace root for `ui-tui/`, `apps/`, and `web/` — all removed or pending removal. Serves no purpose once `ui-tui/` is deleted. |
+**Last synced:** June 2026 — upstream/main at `bb7ff7dc3` (759 commits past our branch point `95715dcb03`). Key changes pulled: cron per-profile storage revert, MCP keepalive/late-binding fixes, Gemini/Google Cloud Code adapters, credential pool + turn context/retry improvements, new test coverage. Skipped: Dockerfile, docker-compose.yml, CLAUDE.md, AGENT_O.md, tools/terminal_tool.py (Agent O customised), removed platform tests (telegram, slack, signal, whatsapp, matrix, discord, etc.), dashboard/tui_gateway tests.
 
 ## Removed from upstream Hermes (do not restore)
 
@@ -71,6 +58,16 @@ The following directories and files were deliberately removed as part of the Age
 | `docs/design/profile-builder.md` | Nous Research design proposal for a dashboard-based profile wizard (never implemented). References the dashboard that was already removed. |
 | `docs/plans/2026-06-09-003-fix-telegram-stream-overflow-continuations-plan.md` | Telegram-specific internal fix plan. No relevance after Telegram adapter removal. |
 | `.envrc` | direnv config that auto-activated the Nix flake and watched `ui-tui/`, `website/`, `apps/`, `nix/` — all of which have been removed. |
+| `ui-tui/`, `tui_gateway/` | Ink/React full-screen TUI and its Python backend. Agent O uses the plain `cli.py` REPL for developer testing. |
+| `optional-skills/` | Nous Research open-source skill library. Agent O defines its own skills in `skills/`. |
+| `setup-hermes.sh` | Contributor quick-start script for the Nous Research open-source project. Not relevant to Agent O deployment. |
+| `docker-compose.windows.yml` | Windows Docker Compose override. Agent O targets Linux containers. |
+| `package.json`, `package-lock.json` | npm workspace root for `ui-tui/`, `apps/`, and `web/` — all removed. |
+| `tools/environments/ssh.py` | SSH remote execution backend. Agent O is always in Docker; remote SSH execution is not needed. |
+| `tools/environments/modal.py`, `managed_modal.py`, `modal_utils.py` | Modal cloud sandbox backends. External cloud service, not used in self-hosted Docker deployment. |
+| `tools/environments/singularity.py` | Apptainer/Singularity HPC container backend. No HPC use case for Agent O. |
+| `tools/environments/daytona.py` | Daytona cloud workspace backend. External cloud service, not relevant. |
+| `tools/environments/file_sync.py` | File sync helper used only by the removed remote backends (SSH, Modal, Singularity, Daytona). Dead code once those were removed. |
 
 ### Kept in gateway/platforms/ (non-obvious)
 
@@ -142,38 +139,115 @@ The ReAct loop and everything it depends on. Nothing here is negotiable.
 
 ---
 
-### Terminal backend (decision pending)
+### Terminal backend
 
-`tools/environments/` contains the terminal execution backends: `local.py`, `docker.py`, `ssh.py`, `modal.py`, `singularity.py`, `daytona.py`.
+Agent O is always deployed in a Docker container. `tools/environments/` retains only:
 
-**Decision pending:** which backend Agent O will use when hosted within the company's infrastructure. Options range from local subprocess execution inside the Docker container, to SSH into a sandboxed VM, to a managed cloud execution environment. Keep all backends until the hosting model is decided.
+- **`local.py`** — executes shell commands inside the container Agent O runs in. This is the active backend.
+- **`docker.py`** — kept pending a decision on whether Docker-in-Docker is needed for sandboxed task execution.
+
+Removed: `ssh.py`, `modal.py`, `managed_modal.py`, `modal_utils.py`, `singularity.py`, `daytona.py`, `file_sync.py` — remote and cloud execution backends not relevant to a self-hosted Docker deployment.
 
 ---
 
-### Memory providers (decision pending)
+### Memory providers
 
 `plugins/memory/` contains pluggable memory backends: honcho, mem0, supermemory, byterover, hindsight, holographic, openviking, retaindb. Each implements the `MemoryProvider` ABC from `agent/memory_provider.py`.
 
-**Decision pending:** Agent O requires per-tenant, per-user memory isolation which none of these personal-use providers natively support. The plan is to implement a custom enterprise memory provider as a standalone plugin. Keep the existing providers as reference implementations of the `MemoryProvider` ABC until the enterprise memory system is designed.
+These are kept as **reference implementations only**. None of them are active in Agent O — they are personal-use providers that do not support per-tenant, per-user memory isolation. They serve as integration patterns and API examples for when a custom enterprise memory module is built as a standalone plugin.
 
 ---
+
+## Baseline verification (Phase 2 testing — June 2026)
+
+Run these in order to verify Agent O is working after any major change.
+
+**Stage 1 — Import check (local, ~2s):**
+```bash
+source .venv/bin/activate
+python -c "import model_tools; model_tools.discover_builtin_tools(); print('tools OK')"
+```
+Pass = prints `tools OK`, no `ModuleNotFoundError`. Last result: **PASS** (June 2026).
+
+**Stage 2 — One-shot smoke (local, ~30s, requires OpenRouter key):**
+```bash
+OPENROUTER_API_KEY=<key> python run_agent.py \
+  --model="anthropic/claude-3-haiku" \
+  --query="Reply with exactly: Agent O baseline online" \
+  --max_turns=1
+```
+Pass = final response is `Agent O baseline online`. Last result: **PASS** (June 2026).
+
+**Stage 3 — Targeted test subset (local, few minutes):**
+```bash
+scripts/run_tests.sh tests/tools/ tests/gateway/ tests/agent/
+```
+Expected: tests for removed platforms (telegram, slack, etc.) fail/skip — that's fine. All tests for kept functionality must pass. Last result: **PASS** (June 2026, known non-Agent-O failures: macOS `/tmp` symlink in `test_file_tools.py`, real `~/.claude/` credentials in `test_anthropic_adapter.py`).
+
+**Stage 4 — Docker end-to-end (the deliverable):**
+See "Build & run (Docker)" section below. Last result: **PASS** (June 2026, image `agent-o:baseline`).
+
+**Setup menu:** Run `docker exec -it agent-o hermes setup` to verify the platform selection screen shows only Microsoft Teams. Mattermost, Signal, Weixin, BlueBubbles, QQBot, and Yuanbao were removed from `_PLATFORMS` in `hermes_cli/gateway.py` (their adapter files were deleted in Phase 1 but they remained in the menu).
 
 ## Development Setup
 
 ```bash
 # Create venv and install all extras
 uv venv .venv --python 3.11
-source .venv/activate
+source .venv/bin/activate
 uv pip install -e ".[all,dev]"
-
-# Optional: browser tools
-npm install
 
 # Config
 mkdir -p ~/.hermes/{cron,sessions,logs,memories,skills}
 cp cli-config.yaml.example ~/.hermes/config.yaml
 touch ~/.hermes/.env
 echo "OPENROUTER_API_KEY=***" >> ~/.hermes/.env
+```
+
+## Build & run (Docker)
+
+Agent O is always deployed as a Docker container. The image is Python-only — no Node.js, npm, or browser runtime.
+
+```bash
+# Build
+docker build -t agent-o:baseline .
+
+# Run (gateway mode, REST API on port 8642)
+docker run -d --name agent-o \
+  -e HERMES_UID=$(id -u) -e HERMES_GID=$(id -g) \
+  -e API_SERVER_HOST=0.0.0.0 -e API_SERVER_PORT=8642 \
+  -e API_SERVER_KEY=<your-token> \
+  -e OPENROUTER_API_KEY=<your-key> \
+  -v ~/.hermes:/opt/data -p 8642:8642 \
+  agent-o:baseline gateway run
+
+# Or with docker compose (reads OPENROUTER_API_KEY and API_SERVER_KEY from ~/.hermes/.env)
+HERMES_UID=$(id -u) HERMES_GID=$(id -g) docker compose up -d
+```
+
+**Health check:**
+```bash
+curl -s http://localhost:8642/health
+# -> {"status": "ok", "platform": "hermes-agent", "version": "..."}
+```
+
+**Send a prompt:**
+```bash
+curl -s http://localhost:8642/v1/chat/completions \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"hermes-agent","messages":[{"role":"user","content":"Hello"}]}'
+```
+
+**Sharing the image (Docker Desktop only required on recipient's machine):**
+```bash
+# Export
+docker save agent-o:baseline | gzip > agent-o-baseline.tar.gz
+
+# Recipient — import and run
+docker load < agent-o-baseline.tar.gz
+docker run -d --name agent-o -v ~/.hermes:/opt/data agent-o:baseline gateway run
+docker exec -it agent-o hermes setup
 ```
 
 ## Running Tests
