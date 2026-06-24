@@ -182,10 +182,12 @@ Pass = final response is `Agent O baseline online`. Last result: **PASS** (June 
 ```bash
 scripts/run_tests.sh tests/tools/ tests/gateway/ tests/agent/
 ```
-Expected: tests for removed platforms (telegram, slack, etc.) fail/skip — that's fine. All tests for kept functionality must pass.
+Expected: tests for removed platforms (telegram, slack, etc.) fail/skip — that's fine. All tests for kept functionality must pass. Last result: **PASS** (June 2026, known non-Agent-O failures: macOS `/tmp` symlink in `test_file_tools.py`, real `~/.claude/` credentials in `test_anthropic_adapter.py`).
 
 **Stage 4 — Docker end-to-end (the deliverable):**
-See "Build & run (Docker)" section below.
+See "Build & run (Docker)" section below. Last result: **PASS** (June 2026, image `agent-o:baseline`).
+
+**Setup menu:** Run `docker exec -it agent-o hermes setup` to verify the platform selection screen shows only Microsoft Teams. Mattermost, Signal, Weixin, BlueBubbles, QQBot, and Yuanbao were removed from `_PLATFORMS` in `hermes_cli/gateway.py` (their adapter files were deleted in Phase 1 but they remained in the menu).
 
 ## Development Setup
 
@@ -235,6 +237,17 @@ curl -s http://localhost:8642/v1/chat/completions \
   -H "Authorization: Bearer <your-token>" \
   -H "Content-Type: application/json" \
   -d '{"model":"hermes-agent","messages":[{"role":"user","content":"Hello"}]}'
+```
+
+**Sharing the image (Docker Desktop only required on recipient's machine):**
+```bash
+# Export
+docker save agent-o:baseline | gzip > agent-o-baseline.tar.gz
+
+# Recipient — import and run
+docker load < agent-o-baseline.tar.gz
+docker run -d --name agent-o -v ~/.hermes:/opt/data agent-o:baseline gateway run
+docker exec -it agent-o hermes setup
 ```
 
 ## Running Tests

@@ -123,17 +123,30 @@ dd7395794 docs(claude): document Agent O cleanup — removed dirs and reasons
 
 - `tools/terminal_tool.py` — module-level imports of deleted backends (`SingularityEnvironment`, `SSHEnvironment`, `ModalEnvironment`, `ManagedModalEnvironment`) caused an immediate `ModuleNotFoundError` on startup. Fixed by removing the deleted imports and adding a local `_get_scratch_dir()` helper backed by the kept `base.py:get_sandbox_dir()`.
 
-**In progress:**
-- Slim the Dockerfile to Python-only (drop Node, npm, Playwright, frontend builds)
-- Trim `docker-compose.yml` (drop dashboard service, expose API server env)
-- Stage 1–4 verification (local import check → one-shot prompt → test suite → Docker end-to-end)
+**All steps complete. Baseline verified June 2026.**
 
-**Branch commits so far:**
-```
-681fffbc9 fix: remove deleted backend imports from terminal_tool.py
-0ce6a57ba docs: clarify memory providers are kept as reference only
-33b6e657a docs: update CLAUDE.md for terminal backend decision
-5bfa441d6 chore: remove unused terminal execution backends
+**Testing results (branch: `testing`):**
+
+| Stage | Test | Result |
+|---|---|---|
+| 1 | Import check — `discover_builtin_tools()` | PASS |
+| 2 | One-shot smoke — OpenRouter `anthropic/claude-3-haiku` | PASS |
+| 3 | Targeted test suite — tools/gateway/agent | PASS (failures only from removed components or macOS env) |
+| 4 | Docker — build → run → `/health` → `/v1/chat/completions` | PASS |
+
+**Additional fixes found during testing:**
+- `agent/secret_scope.py`, `hermes_cli/managed_scope.py`, `tools/async_delegation.py`, `cron/scheduler_provider.py` — all missed in the original upstream sync; pulled and committed.
+- Dead consumer platform entries (Mattermost, Signal, Weixin, BlueBubbles, QQBot, Yuanbao) removed from `hermes setup` menu — adapter files were deleted in Phase 1 but they were still appearing as selectable options, confusing new users.
+
+**Sharing the baseline image:**
+```bash
+# Export (on your machine)
+docker save agent-o:baseline | gzip > agent-o-baseline.tar.gz
+
+# Import and run (supervisor's machine — Docker Desktop only required)
+docker load < agent-o-baseline.tar.gz
+docker run -d --name agent-o -v ~/.hermes:/opt/data agent-o:baseline gateway run
+docker exec -it agent-o hermes setup
 ```
 
 ---
