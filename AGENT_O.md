@@ -92,7 +92,7 @@ dd7395794 docs(claude): document Agent O cleanup — removed dirs and reasons
 
 ---
 
-### Phase 2 — Baseline Docker image (branch: `second-changes`, in progress)
+### Phase 2 — Baseline Docker image (branches: `second-changes` + `testing` → merged to `main`, complete)
 
 **Goal:** Produce a clean, buildable, bootable Docker image of Agent O that responds to a real prompt via the REST API — portable enough to move into the company Azure repo.
 
@@ -164,9 +164,9 @@ docker exec -it agent-o hermes setup
 - **Sub-agent delegation** — isolated parallel sub-agents (`delegate_task(background=true)`)
 - **Fine-tuning pipeline** — `batch_runner.py` + `trajectory_compressor.py` for training-data generation
 
-**What it cannot do yet:**
-- Talk to Agent Y, IBM Maximo, or Oracle Procurement (Phase 2 tools work)
-- Receive messages from the company platform (Phase 2 company adapter)
+**What it cannot do yet (Phase 3+):**
+- Talk to Agent Y, IBM Maximo, or Oracle Procurement (custom tool integrations)
+- Receive messages from the company platform (company messaging adapter)
 - Enforce permission scopes per user/tenant
 - Produce an immutable audit trail
 - Pause for human approval and resume hours later (HITL)
