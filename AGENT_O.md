@@ -12,7 +12,13 @@ Built for enterprise use with support for permission-scoped execution, human-in-
 
 ## Phases
 
-### Phase 1 — Strip to the core (branch: `first-changes` → merged to `main`)
+> **Phase numbering:** This document uses the canonical numbering from the phased build plan PDF.
+> The strip and Docker baseline work we completed corresponds to **Phase 1, Steps 1–3** of that plan.
+> Phases 2–4 (memory system, self-learning loop, enterprise hardening) have not yet started.
+
+### Phase 1 — Core orchestrator with skill retrieval
+
+#### Steps 1–2 — Codebase mapping & strip (branch: `first-changes` → merged to `main`)
 
 **Goal:** Start from upstream Hermes Agent and remove everything that is not relevant to enterprise orchestration. Leave the engine intact; cut the consumer surface.
 
@@ -60,7 +66,7 @@ Built for enterprise use with support for permission-scoped execution, human-in-
 | Teams adapter (`plugins/platforms/teams/`) | Full Microsoft Teams adapter for planned future integration |
 | Microsoft Graph webhook (`gateway/platforms/msgraph_webhook.py`) | Inbound Teams/Office365 event handler |
 | Memory providers (`plugins/memory/`) | Kept as **reference implementations only** — patterns for building a future custom enterprise memory module with per-tenant isolation |
-| Terminal backends (`tools/environments/`) | Kept pending decision on hosting model (see Phase 2) |
+| Terminal backends (`tools/environments/`) | Kept pending decision on hosting model (see Step 3) |
 | Docs (`docs/`) | Kept: kanban spec, middleware contract, observability hooks, Docker network security, SSL RCA |
 | Locales (`locales/`) | Gateway runtime dependency — `agent.i18n` loads these at startup |
 | `LICENSE` | MIT licence — must be preserved |
@@ -92,9 +98,9 @@ dd7395794 docs(claude): document Agent O cleanup — removed dirs and reasons
 
 ---
 
-### Phase 2 — Baseline Docker image (branches: `second-changes` + `testing` → merged to `main`, complete)
+#### Step 3 — Adapt core for environment / Docker baseline (branches: `second-changes` + `testing` → merged to `main`, complete)
 
-**Goal:** Produce a clean, buildable, bootable Docker image of Agent O that responds to a real prompt via the REST API — portable enough to move into the company Azure repo.
+**Goal:** Produce a clean, buildable, bootable Docker image of Agent O that responds to a real prompt via the REST API — portable enough to move into the company AWS repo.
 
 **Decisions made:**
 
@@ -164,12 +170,17 @@ docker exec -it agent-o hermes setup
 - **Sub-agent delegation** — isolated parallel sub-agents (`delegate_task(background=true)`)
 - **Fine-tuning pipeline** — `batch_runner.py` + `trajectory_compressor.py` for training-data generation
 
-**What it cannot do yet (Phase 3+):**
-- Talk to Agent Y, IBM Maximo, or Oracle Procurement (custom tool integrations)
-- Receive messages from the company platform (company messaging adapter)
-- Enforce permission scopes per user/tenant
-- Produce an immutable audit trail
-- Pause for human approval and resume hours later (HITL)
+**What it cannot do yet:**
+
+| Capability | Planned phase |
+|---|---|
+| Enterprise skill retrieval + sub-agent delegation end-to-end | Phase 1, Steps 4–7 |
+| Long-term memory across sessions (Hindsight, self-hosted) | Phase 2 |
+| Enforce permission scopes per user/tenant | Phase 2 (stub) → Phase 4 (full) |
+| Talk to Agent Y, IBM Maximo, or Oracle Procurement | Phase 1, Step 5 (skills) |
+| Produce an immutable audit trail | Phase 4 |
+| Pause for human approval and resume hours later (HITL) | Phase 4 |
+| Self-generating and self-refining skills | Phase 3 |
 
 ---
 
