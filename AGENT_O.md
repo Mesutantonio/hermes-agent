@@ -100,7 +100,7 @@ dd7395794 docs(claude): document Agent O cleanup — removed dirs and reasons
 
 #### Step 3 — Adapt core for environment / Docker baseline (branches: `second-changes` + `testing` → merged to `main`, complete)
 
-**Goal:** Produce a clean, buildable, bootable Docker image of Agent O that responds to a real prompt via the REST API — portable enough to move into the company AWS repo.
+**Goal:** Produce a clean, buildable, bootable Docker image of Agent O that responds to a real prompt via the REST API — portable enough to move into the company Azure DevOps repo and deploy on AWS.
 
 **Decisions made:**
 
