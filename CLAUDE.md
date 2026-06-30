@@ -6,7 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is **Agent O** — an enterprise orchestration agent built on the Nous Research Hermes Agent codebase (MIT licence). It has been stripped of personal/consumer features and is being extended for enterprise multi-tenant use.
 
-- [AGENT_O.md](AGENT_O.md) — Agent O build log and progress documentation (grows over time)
+- [docs/VISION.md](docs/VISION.md) — Agent O project goal, use cases, and business context
+- [docs/AGENT_O.md](docs/AGENT_O.md) — Agent O build log and progress documentation (grows over time)
 - [AGENTS.md](AGENTS.md) — Full Hermes developer reference (architecture, patterns, critical rules)
 
 ## Upstream sync policy
@@ -154,11 +155,13 @@ Removed: `ssh.py`, `modal.py`, `managed_modal.py`, `modal_utils.py`, `singularit
 
 `plugins/memory/` contains pluggable memory backends: honcho, mem0, supermemory, byterover, hindsight, holographic, openviking, retaindb. Each implements the `MemoryProvider` ABC from `agent/memory_provider.py`.
 
-These are kept as **reference implementations only**. None of them are active in Agent O — they are personal-use providers that do not support per-tenant, per-user memory isolation. They serve as integration patterns and API examples for when a custom enterprise memory module is built as a standalone plugin.
+**Chosen enterprise provider: Hindsight** (`plugins/memory/hindsight/`). To be deployed as a self-hosted instance in the company AWS VPC (`local_external` mode). Multi-tenant isolation via `bank_id_template` (e.g. `agent-o-{profile}-{user}`). Provides durable factual memory and entity-graph recall — not behavioural user modelling. Configured via `memory.provider: hindsight` in `config.yaml`.
+
+The remaining 7 providers are kept as **reference implementations only** — patterns for building future memory integrations. Do not activate more than one external provider at a time (`MemoryManager` enforces this).
 
 ---
 
-## Baseline verification (Phase 2 testing — June 2026)
+## Baseline verification (Phase 1, Step 3 complete — June 2026)
 
 Run these in order to verify Agent O is working after any major change.
 
