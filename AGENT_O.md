@@ -163,7 +163,8 @@ docker exec -it agent-o hermes setup
 - **33 active tools** — terminal, file, web, browser automation, code execution, vision, delegation (including async background subagents), kanban, cron, memory, skills, MCP, send message, clarify, approval
 - **29 model providers** — Anthropic, OpenAI, OpenRouter, Gemini, Bedrock, Azure, DeepSeek, NVIDIA, Ollama, xAI, and more
 - **Skills library** — research, software-development, devops, mlops, data-science, productivity, email, github, note-taking, autonomous-ai-agents
-- **8 memory provider reference implementations** — honcho, mem0, supermemory, byterover, hindsight, holographic, openviking, retaindb
+- **Tiered memory** — Tier 1 (always-loaded soul + session context), Tier 2 (FTS5 full-text session search), Tier 3 (progressive skill disclosure). Tier 4 (durable factual memory) will be Hindsight, self-hosted in the company AWS VPC — stores observations + entity graph, isolated per tenant via `bank_id_template`. Note: Tier 4 provides factual knowledge recall, not behavioural user modelling.
+- **8 memory provider reference implementations** — honcho, mem0, supermemory, byterover, hindsight, holographic, openviking, retaindb (Hindsight is the chosen enterprise provider)
 - **REST API gateway** — OpenAI-compatible `/v1/chat/completions`, `/v1/runs`, `/health` via `api_server.py` (port 8642)
 - **Webhook gateway** — inbound HTTP webhooks with HMAC validation for non-human triggers
 - **Scheduler** — cron/interval-based job runner across full agent pipeline
@@ -175,12 +176,13 @@ docker exec -it agent-o hermes setup
 | Capability | Planned phase |
 |---|---|
 | Enterprise skill retrieval + sub-agent delegation end-to-end | Phase 1, Steps 4–7 |
-| Long-term memory across sessions (Hindsight, self-hosted) | Phase 2 |
+| Connect to Agent Y (priority), IBM Maximo API, Oracle Procurement API, Claude Cowork job queue | Phase 1, Step 5 (skills) |
+| Delegate research to Claude Cowork via job queue | Phase 1, Step 5 (skills) |
+| Long-term factual memory across sessions (Hindsight, self-hosted AWS VPC) | Phase 2 |
 | Enforce permission scopes per user/tenant | Phase 2 (stub) → Phase 4 (full) |
-| Talk to Agent Y, IBM Maximo, or Oracle Procurement | Phase 1, Step 5 (skills) |
 | Produce an immutable audit trail | Phase 4 |
 | Pause for human approval and resume hours later (HITL) | Phase 4 |
-| Self-generating and self-refining skills | Phase 3 |
+| Self-generating and self-refining skills with governance review | Phase 3 |
 
 ---
 
